@@ -1,6 +1,6 @@
-# NexusAI: Hand Gesture Control Hub
+# Gesture AI: Hand Gesture Control Hub
 
-NexusAI is a powerful, browser-based web application that leverages state-of-the-art computer vision to translate your hand gestures into interactive experiences. No extra hardware required—just your webcam and your browser.
+Gesture AI is a powerful, browser-based web application that leverages state-of-the-art computer vision to translate your hand gestures into interactive experiences. No extra hardware required—just your webcam and your browser.
 
 ## Features
 
@@ -45,7 +45,7 @@ This project heavily prioritizes a premium, sleek aesthetic utilizing dark modes
 
 ## Privacy & Security
 
-All AI processing happens locally in your browser using MediaPipe. Your camera feed is never recorded, saved, or sent to any server. NexusAI ensures total privacy.
+All AI processing happens locally in your browser using MediaPipe. Your camera feed is never recorded, saved, or sent to any server. Gesture AI ensures total privacy.
 
 ---
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Camera, Zap, Shield, Sparkles, ChevronRight, Activity, Hand, Brain, Scissors, Edit3, Calculator, Map, Puzzle, CircleDashed, ArrowDownCircle, Languages, Aperture, Code, Layers, Cpu, Heart } from 'lucide-react';
 
 const FEATURES = [
@@ -116,7 +117,7 @@ export default function LandingPage() {
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#00f2fe] to-[#4facfe] flex items-center justify-center shadow-[0_0_20px_rgba(0,242,254,0.4)]">
             <Camera className="text-white" size={24} />
           </div>
-          <span className="text-2xl font-black tracking-tight text-white">Nexus<span className="text-[#00f2fe]">AI</span></span>
+          <span className="text-2xl font-black tracking-tight text-white">Gesture<span className="text-[#00f2fe]">AI</span></span>
         </div>
         <div className="hidden md:flex gap-8 text-sm font-bold text-slate-300">
           <a href="#features" className="hover:text-white transition-colors">Features</a>
@@ -129,57 +130,70 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <main className="relative z-10 flex flex-col items-center justify-center px-4 pt-24 pb-32 text-center">
+      <main className="relative z-10 flex flex-col items-center justify-center px-4 pt-32 pb-40 text-center">
         
-        {/* Creator Intro Badge */}
-        <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full glass-button mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 border-primary/30 shadow-[0_0_20px_rgba(59,130,246,0.2)] bg-primary/10">
-          <Heart size={16} className="text-pink-500 animate-pulse" />
-          <span className="text-sm font-bold text-slate-300">Built with Passion & AI by <span className="text-white font-black">Priyanka Priyadarshinee</span></span>
-        </div>
-
-        <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-white tracking-tighter max-w-6xl leading-[1.1] mb-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150 fill-mode-forwards opacity-0 drop-shadow-2xl">
-          Control your world with <br className="hidden md:block" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] via-[#4facfe] to-[#00f2fe] bg-[length:200%_auto] animate-gradient pb-2 inline-block">
-            pure motion.
+        <motion.h1 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-tighter max-w-5xl leading-[1.1] mb-8 drop-shadow-2xl"
+        >
+          Control with your <br className="hidden md:block" />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] via-[#4facfe] to-[#00f2fe] bg-[length:200%_auto] animate-gradient pb-2 inline-block drop-shadow-[0_0_30px_rgba(0,242,254,0.3)]">
+            gestures.
           </span>
-        </h1>
+        </motion.h1>
 
-        <p className="text-xl md:text-2xl text-slate-400 max-w-3xl mb-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 fill-mode-forwards opacity-0 leading-relaxed font-medium">
-          Experience the next evolution of spatial computing. No hardware required. 
-          Use your webcam to draw, play, calculate, and communicate using advanced AI hand tracking.
-        </p>
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+          className="max-w-3xl mb-12"
+        >
+          <p className="text-lg md:text-xl text-slate-300 leading-relaxed font-medium mb-4">
+            <span className="text-white italic">"The most powerful interface is the one you already possess."</span>
+          </p>
+          <p className="text-base md:text-lg text-slate-400 leading-relaxed">
+            Experience the next evolution of spatial computing. Transform your browser into a magical canvas using advanced artificial intelligence. No hardware required—just your hands and your imagination.
+          </p>
+        </motion.div>
 
-        <div className="flex flex-col sm:flex-row gap-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500 fill-mode-forwards opacity-0">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+          className="flex flex-col sm:flex-row gap-6"
+        >
           <Link 
             to="/app" 
-            className="group relative px-10 py-5 bg-white text-black font-black rounded-2xl overflow-hidden transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.4)] flex items-center justify-center gap-3 text-xl"
+            className="group relative px-8 py-4 bg-white text-black font-black rounded-2xl overflow-hidden transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.4)] flex items-center justify-center gap-3 text-lg"
           >
-            <span className="relative z-10">Get Started Free</span>
+            <span className="relative z-10">Get Started</span>
             <ChevronRight className="relative z-10 group-hover:translate-x-1 transition-transform" />
             <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"></div>
           </Link>
           
           <a 
             href="#features" 
-            className="px-10 py-5 glass-panel rounded-2xl font-bold text-white hover:bg-white/10 transition-all flex items-center justify-center gap-3 text-xl border border-white/10 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]"
+            className="px-8 py-4 glass-panel rounded-2xl font-bold text-white hover:bg-white/10 transition-all flex items-center justify-center gap-3 text-lg border border-white/10 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]"
           >
             Explore Features
           </a>
-        </div>
+        </motion.div>
       </main>
 
       {/* Introduction Paragraph */}
-      <section className="relative z-10 max-w-5xl mx-auto px-6 py-12 text-center animate-in fade-in duration-1000 delay-500">
+      <section className="relative z-10 max-w-5xl mx-auto px-6 py-12 text-center">
         <div className="glass-panel p-8 md:p-12 rounded-3xl border border-primary/20 bg-slate-900/40 shadow-[0_0_40px_rgba(0,242,254,0.1)]">
           <p className="text-xl md:text-2xl text-slate-300 leading-relaxed font-medium">
-            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#4facfe] font-black">NexusAI</span>, a revolutionary browser-based platform that translates your hand gestures into interactive commands. Whether you want to draw in mid-air, challenge an AI in Rock Paper Scissors, or test your memory, everything is controlled securely and privately through your webcam. No extra hardware, no downloads—just seamless spatial computing directly in your browser.
+            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#4facfe] font-black">Gesture AI</span>, a revolutionary browser-based platform that translates your hand gestures into interactive commands. Whether you want to draw in mid-air, challenge an AI in Rock Paper Scissors, or test your memory, everything is controlled securely and privately through your webcam. No extra hardware, no downloads—just seamless spatial computing directly in your browser.
           </p>
         </div>
       </section>
 
       {/* Full Feature Grid */}
       <section id="features" className="relative z-10 max-w-7xl mx-auto px-4 py-24">
-        <div className="text-center mb-16 animate-in fade-in duration-1000">
+        <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-black text-white mb-4">12 Powerful Features</h2>
           <p className="text-xl text-slate-400">Jump directly into any module from right here.</p>
         </div>
@@ -227,15 +241,19 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/10 py-12 text-center bg-black/50 backdrop-blur-md">
-        <div className="flex items-center justify-center gap-3 mb-6">
+      <footer className="relative z-10 border-t border-white/10 py-16 text-center bg-[#030712] backdrop-blur-md flex flex-col items-center">
+        <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass-button mb-8 border border-primary/20 shadow-[0_0_20px_rgba(59,130,246,0.15)] bg-primary/5 hover:bg-primary/10 transition-colors">
+          <Heart size={16} className="text-pink-500 animate-pulse" />
+          <span className="text-sm font-bold text-slate-300">Built with Passion & AI by <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#4facfe] font-black">Priyanka Priyadarshinee</span></span>
+        </div>
+        
+        <div className="flex items-center justify-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00f2fe] to-[#4facfe] flex items-center justify-center shadow-[0_0_15px_rgba(0,242,254,0.4)]">
             <Camera className="text-white" size={20} />
           </div>
-          <span className="text-xl font-black tracking-tight text-white">Nexus<span className="text-[#00f2fe]">AI</span></span>
+          <span className="text-xl font-black tracking-tight text-white">Gesture<span className="text-[#00f2fe]">AI</span></span>
         </div>
-        <p className="text-slate-500 font-medium">© 2026 Designed & Developed by Priyanka Priyadarshinee.</p>
-        <p className="text-slate-600 text-sm mt-2">All rights reserved.</p>
+        <p className="text-slate-600 text-sm mt-2">© 2026 All rights reserved.</p>
       </footer>
     </div>
   );

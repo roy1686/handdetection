@@ -2,34 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import WebcamOverlay from '../components/WebcamOverlay';
 import { drawHandResults } from '../utils/drawHands';
 import { countFingers } from '../utils/gestureMath';
-import { Hand, Users, Volume2, VolumeX } from 'lucide-react';
+import { Hand, Users } from 'lucide-react';
 
 export default function FingerCounter() {
   const [totalFingers, setTotalFingers] = useState(0);
   const [personsCount, setPersonsCount] = useState(1);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  
-  const lastSpokenRef = useRef(-1);
-  const debounceTimeoutRef = useRef(null);
-
-  const speakCount = (count, persons) => {
-    if (!soundEnabled) return;
-    
-    // Only speak if count changes to avoid spamming
-    if (count !== lastSpokenRef.current) {
-      if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
-      
-      debounceTimeoutRef.current = setTimeout(() => {
-        window.speechSynthesis.cancel(); // Stop any current speech
-        const textToSpeak = `${count} fingers detected`;
-        const msg = new SpeechSynthesisUtterance(textToSpeak);
-        msg.rate = 1.2;
-        msg.pitch = 0.5 + (count * 0.15); // Pitch increases as finger count increases
-        window.speechSynthesis.speak(msg);
-        lastSpokenRef.current = count;
-      }, 150); // 150ms debounce for faster response
-    }
-  };
+  const [personsCount, setPersonsCount] = useState(1);
 
   const handleResults = (results, ctx, canvas) => {
     drawHandResults(results, ctx, canvas);
@@ -50,16 +28,7 @@ export default function FingerCounter() {
     
     const detectedPersons = handCount > 2 ? 2 : (handCount > 0 ? 1 : 0);
     setPersonsCount(detectedPersons);
-    
-    if (handCount > 0) {
-      speakCount(count, detectedPersons);
-    }
   };
-
-  // Cleanup speech on unmount
-  useEffect(() => {
-    return () => window.speechSynthesis.cancel();
-  }, []);
 
   return (
     <div className="h-full flex flex-col">
@@ -68,12 +37,6 @@ export default function FingerCounter() {
           <h2 className="text-2xl font-bold mb-1 text-white">Finger Counter</h2>
           <p className="text-slate-400 text-sm">Hold up your hands to count fingers in real-time</p>
         </div>
-        <button 
-          onClick={() => setSoundEnabled(!soundEnabled)}
-          className={`p-3 rounded-full transition-colors ${soundEnabled ? 'bg-primary/20 text-primary' : 'bg-slate-800 text-slate-400'}`}
-        >
-          {soundEnabled ? <Volume2 size={24} /> : <VolumeX size={24} />}
-        </button>
       </div>
 
       <div className="flex-1 relative rounded-2xl overflow-hidden border border-slate-700/50 bg-black">

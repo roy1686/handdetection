@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import WebcamOverlay from '../components/WebcamOverlay';
 import { drawHandResults } from '../utils/drawHands';
 import { countFingers } from '../utils/gestureMath';
-import { Calculator, Delete, Volume2, HelpCircle } from 'lucide-react';
+import { Calculator, Delete, HelpCircle } from 'lucide-react';
 
 export default function GestureCalculator() {
   const [expression, setExpression] = useState('');
@@ -21,7 +21,6 @@ export default function GestureCalculator() {
     { label: 'C', x: 140, y: 220 }, { label: '=', x: 380, y: 220 }
   ];
 
-  const handleInput = (val) => {
     if (val === 'C') {
       setExpression('');
       setResult(null);
@@ -29,19 +28,12 @@ export default function GestureCalculator() {
       try {
         const evalResult = eval(expression);
         setResult(evalResult);
-        speakResult(evalResult);
       } catch (e) {
         setResult('Error');
       }
     } else {
       setExpression(prev => prev + val);
     }
-  };
-
-  const speakResult = (res) => {
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(`The answer is ${res}`);
-    window.speechSynthesis.speak(u);
   };
 
   const handleResults = (results, ctx, canvas) => {
@@ -158,10 +150,6 @@ export default function GestureCalculator() {
     setExpression(prev => prev.slice(0, -1));
   };
 
-  useEffect(() => {
-    return () => window.speechSynthesis.cancel();
-  }, []);
-
   return (
     <div className="h-full flex flex-col">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
@@ -230,15 +218,9 @@ export default function GestureCalculator() {
             <div className="flex gap-4">
               <button 
                 onClick={deleteLast}
-                className="flex-1 flex items-center justify-center gap-2 py-4 bg-slate-800 hover:bg-slate-700 text-red-400 font-bold rounded-2xl transition-all border border-slate-700 shadow-lg"
+                className="w-full flex items-center justify-center gap-2 py-4 bg-slate-800 hover:bg-slate-700 text-red-400 font-bold rounded-2xl transition-all border border-slate-700 shadow-lg"
               >
                 <Delete size={20} /> Backspace
-              </button>
-              <button 
-                onClick={() => { if(result) speakResult(result); }}
-                className="flex-1 flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-primary to-blue-600 hover:from-blue-500 hover:to-blue-400 text-white font-bold rounded-2xl transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)]"
-              >
-                <Volume2 size={20} /> Repeat
               </button>
             </div>
           </div>

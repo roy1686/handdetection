@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Camera, Hand, LayoutDashboard, Scissors, Edit3, Calculator, Activity, Map, Brain, Info, Menu, Puzzle, CircleDashed, ArrowDownCircle, Languages, Aperture, Volume2, VolumeX } from 'lucide-react';
+import { Camera, Hand, LayoutDashboard, Scissors, Edit3, Calculator, Activity, Map, Brain, Info, Menu, Puzzle, CircleDashed, ArrowDownCircle, Languages, Aperture, Code, Layers, Cpu, Heart } from 'lucide-react';
 
 const navItems = [
   { name: 'Hand Detection', path: '/app', icon: Camera },
@@ -20,7 +20,6 @@ const navItems = [
 export default function DashboardLayout() {
   const location = useLocation();
   const [isSidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
-  const [audioEnabled, setAudioEnabled] = useState(false);
 
   // Close sidebar on mobile when route changes
   useEffect(() => {
@@ -28,13 +27,6 @@ export default function DashboardLayout() {
       setSidebarOpen(false);
     }
   }, [location.pathname]);
-
-  const initAudio = () => {
-    // Play a silent utterance to unlock speech synthesis in browsers
-    const u = new SpeechSynthesisUtterance('');
-    window.speechSynthesis.speak(u);
-    setAudioEnabled(true);
-  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#030712]">
@@ -56,7 +48,7 @@ export default function DashboardLayout() {
           {isSidebarOpen && (
             <Link to="/" className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-[#00f2fe] to-[#4facfe] flex items-center gap-2">
               <Camera size={28} className="text-[#00f2fe]" />
-              NexusAI
+              Gesture AI
             </Link>
           )}
           <button 
@@ -105,20 +97,6 @@ export default function DashboardLayout() {
 
         {/* Bottom Actions */}
         <div className="p-4 border-t border-white/5 flex flex-col gap-3">
-          {isSidebarOpen && !audioEnabled && (
-            <button 
-              onClick={initAudio}
-              className="flex items-center justify-center gap-2 w-full py-3 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-500 rounded-xl font-bold transition-colors border border-yellow-500/30 text-sm"
-            >
-              <VolumeX size={16} /> Enable Sound/Voice
-            </button>
-          )}
-          {isSidebarOpen && audioEnabled && (
-            <div className="flex items-center justify-center gap-2 w-full py-3 bg-green-500/10 text-green-400 rounded-xl font-bold border border-green-500/20 text-sm">
-              <Volume2 size={16} /> Sound Enabled
-            </div>
-          )}
-
           <Link
             to="/about"
             className="flex items-center px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors font-bold"
