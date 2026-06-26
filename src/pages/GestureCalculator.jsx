@@ -21,6 +21,7 @@ export default function GestureCalculator() {
     { label: 'C', x: 140, y: 220 }, { label: '=', x: 380, y: 220 }
   ];
 
+  const handleInput = (val) => {
     if (val === 'C') {
       setExpression('');
       setResult(null);

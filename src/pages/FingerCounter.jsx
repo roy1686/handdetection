@@ -7,7 +7,6 @@ import { Hand, Users } from 'lucide-react';
 export default function FingerCounter() {
   const [totalFingers, setTotalFingers] = useState(0);
   const [personsCount, setPersonsCount] = useState(1);
-  const [personsCount, setPersonsCount] = useState(1);
 
   const handleResults = (results, ctx, canvas) => {
     drawHandResults(results, ctx, canvas);

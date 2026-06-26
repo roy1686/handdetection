@@ -39,10 +39,6 @@ export default function ScreenshotCapture() {
 
     const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
     setGallery(prev => [{ id: Date.now(), url: dataUrl }, ...prev]);
-    
-    // Play shutter sound
-    const audio = new Audio('https://www.soundjay.com/mechanical/sounds/camera-shutter-click-01.mp3');
-    audio.play().catch(e => console.log('Audio error:', e));
   };
 
   const getCanvasFilter = (f) => {

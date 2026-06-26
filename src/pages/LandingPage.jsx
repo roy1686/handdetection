@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Camera, Zap, Shield, Sparkles, ChevronRight, Activity, Hand, Brain, Scissors, Edit3, Calculator, Map, Puzzle, CircleDashed, ArrowDownCircle, Languages, Aperture, Code, Layers, Cpu, Heart } from 'lucide-react';
+import { Camera, Zap, Shield, Sparkles, ChevronRight, Activity, Hand, Brain, Scissors, Edit3, Calculator, Map, Puzzle, CircleDashed, ArrowDownCircle, Languages, Aperture, Code, Layers, Cpu, Heart, Menu, X } from 'lucide-react';
 
 const FEATURES = [
   { name: 'Hand Detection', path: '/app', icon: Camera, color: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-500/30' },
@@ -26,6 +26,7 @@ const TECH_STACK = [
 ];
 
 export default function LandingPage() {
+  const [navOpen, setNavOpen] = useState(false);
   const canvasRef = useRef(null);
 
   // Background particle effect
@@ -112,21 +113,54 @@ export default function LandingPage() {
       </div>
 
       {/* Navbar */}
-      <nav className="relative z-10 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto backdrop-blur-sm border-b border-white/5 sticky top-0 bg-[#030712]/50">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#00f2fe] to-[#4facfe] flex items-center justify-center shadow-[0_0_20px_rgba(0,242,254,0.4)]">
-            <Camera className="text-white" size={24} />
+      <nav className="relative z-10 px-6 md:px-8 py-5 max-w-7xl mx-auto backdrop-blur-2xl border-b border-white/10 sticky top-0 bg-[#030712]/90 shadow-black/40 shadow-sm">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-3xl bg-gradient-to-br from-[#00f2fe] to-[#4facfe] flex items-center justify-center shadow-[0_0_30px_rgba(0,242,254,0.25)]">
+              <Camera className="text-white" size={24} />
+            </div>
+            <div>
+              <div className="text-xl font-black text-white tracking-tight">Gesture<span className="text-[#00f2fe]">AI</span></div>
+              <div className="text-xs uppercase tracking-[0.25em] text-slate-500 mt-0.5">Interactive gesture experiences</div>
+            </div>
           </div>
-          <span className="text-2xl font-black tracking-tight text-white">Gesture<span className="text-[#00f2fe]">AI</span></span>
+
+          <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-300">
+            <a href="#features" className="hover:text-white transition-colors">Features</a>
+            <a href="#tech" className="hover:text-white transition-colors">Tech Stack</a>
+            <a href="#about" className="hover:text-white transition-colors">About</a>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Link to="/app" className="hidden md:inline-flex items-center justify-center px-6 py-3 bg-white text-black font-black rounded-2xl border border-transparent hover:bg-slate-100 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.12)]">
+              Launch App
+            </Link>
+            <button
+              onClick={() => setNavOpen(!navOpen)}
+              className="inline-flex items-center justify-center p-3 rounded-2xl border border-white/10 bg-white/5 text-white hover:bg-white/10 transition-colors md:hidden"
+              aria-label="Toggle navigation menu"
+            >
+              {navOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
-        <div className="hidden md:flex gap-8 text-sm font-bold text-slate-300">
-          <a href="#features" className="hover:text-white transition-colors">Features</a>
-          <a href="#tech" className="hover:text-white transition-colors">Tech Stack</a>
-          <a href="#about" className="hover:text-white transition-colors">About</a>
-        </div>
-        <Link to="/app" className="px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-bold rounded-xl border border-white/10 transition-all shadow-lg hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]">
-          Launch App
-        </Link>
+
+        {navOpen && (
+          <div className="mt-4 p-5 rounded-3xl border border-white/10 bg-slate-950/95 backdrop-blur-2xl shadow-[0_30px_80px_rgba(0,0,0,0.45)] md:hidden">
+            <div className="flex flex-col gap-3 text-white font-semibold">
+              <a href="#features" onClick={() => setNavOpen(false)} className="rounded-2xl px-4 py-3 hover:bg-white/10 transition-colors">Features</a>
+              <a href="#tech" onClick={() => setNavOpen(false)} className="rounded-2xl px-4 py-3 hover:bg-white/10 transition-colors">Tech Stack</a>
+              <a href="#about" onClick={() => setNavOpen(false)} className="rounded-2xl px-4 py-3 hover:bg-white/10 transition-colors">About</a>
+              <Link
+                to="/app"
+                onClick={() => setNavOpen(false)}
+                className="mt-2 inline-flex items-center justify-center rounded-2xl bg-white text-black py-3 font-black text-center"
+              >
+                Launch App
+              </Link>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}

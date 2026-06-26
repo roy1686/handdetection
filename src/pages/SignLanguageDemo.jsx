@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import WebcamOverlay from '../components/WebcamOverlay';
 import { drawHandResults } from '../utils/drawHands';
 import { detectSignLanguage } from '../utils/signLanguageMath';
-import { Languages, Volume2, MessageSquare, Delete, BookOpen } from 'lucide-react';
+import { Languages, MessageSquare, Delete, BookOpen } from 'lucide-react';
 
 const ALPHABET = [
   { letter: 'A', desc: 'Fist with thumb resting to the side' },
@@ -100,22 +100,10 @@ export default function SignLanguageDemo() {
     }
   };
 
-  const speakSentence = () => {
-    const textToSpeak = sentence + (currentWord ? ' ' + currentWord : '');
-    if (!textToSpeak) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    window.speechSynthesis.speak(utterance);
-  };
-
   const clearAll = () => {
     setCurrentWord('');
     setSentence('');
   };
-
-  useEffect(() => {
-    return () => window.speechSynthesis.cancel();
-  }, []);
 
   return (
     <div className="h-full flex flex-col">
@@ -177,10 +165,6 @@ export default function SignLanguageDemo() {
                 Clear All
               </button>
             </div>
-
-            <button onClick={speakSentence} className="w-full flex items-center justify-center gap-2 p-4 mb-4 bg-gradient-to-r from-primary to-secondary hover:from-blue-500 hover:to-purple-500 text-white rounded-xl transition-all font-bold shadow-[0_0_20px_rgba(59,130,246,0.3)] transform hover:scale-[1.02]">
-              <Volume2 size={20} /> Speak Text
-            </button>
 
             {/* Bottom Right Manual Reference */}
             {showManual && (
