@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Camera, Hand, LayoutDashboard, Scissors, Edit3, Calculator, Activity, Map, Brain, Info, Menu, Puzzle, CircleDashed, ArrowDownCircle, Languages } from 'lucide-react';
+import { Camera, Hand, LayoutDashboard, Scissors, Edit3, Calculator, Activity, Map, Brain, Info, Menu, Puzzle, CircleDashed, ArrowDownCircle, Languages, Aperture, Volume2, VolumeX } from 'lucide-react';
 
 const navItems = [
   { name: 'Hand Detection', path: '/app', icon: Camera },
@@ -8,63 +8,141 @@ const navItems = [
   { name: 'Air Canvas', path: '/app/air-canvas', icon: Edit3 },
   { name: 'Rock Paper Scissors', path: '/app/rock-paper-scissors', icon: Scissors },
   { name: 'Gesture Calculator', path: '/app/calculator', icon: Calculator },
+  { name: 'Screenshot', path: '/app/screenshot', icon: Aperture },
   { name: 'Speed Tracker', path: '/app/speed-tracker', icon: Activity },
   { name: 'Hand Heatmap', path: '/app/heatmap', icon: Map },
   { name: 'Gesture Memory', path: '/app/memory', icon: Brain },
   { name: 'Picture Puzzle', path: '/app/picture-puzzle', icon: Puzzle },
   { name: 'Tic-Tac-Toe', path: '/app/tic-tac-toe', icon: CircleDashed },
   { name: 'Catch Game', path: '/app/catch-game', icon: ArrowDownCircle },
-  { name: 'Sign Language', path: '/app/sign-language', icon: Languages },
 ];
 
 export default function DashboardLayout() {
   const location = useLocation();
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+  const [isSidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
+  const [audioEnabled, setAudioEnabled] = useState(false);
+
+  // Close sidebar on mobile when route changes
+  useEffect(() => {
+    if (window.innerWidth <= 768) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname]);
+
+  const initAudio = () => {
+    // Play a silent utterance to unlock speech synthesis in browsers
+    const u = new SpeechSynthesisUtterance('');
+    window.speechSynthesis.speak(u);
+    setAudioEnabled(true);
+  };
 
   return (
-    <div className="flex h-screen bg-slate-900 text-white overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-[#030712]">
+      {/* Mobile Backdrop Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300 ease-in-out glass-panel m-4 flex flex-col`}>
-        <div className="flex items-center justify-between p-4 border-b border-slate-700/50">
-          {isSidebarOpen && <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">GestureAI</span>}
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 rounded-lg hover:bg-slate-700/50">
-            <Menu size={20} />
+      <aside className={`
+        ${isSidebarOpen ? 'w-72 translate-x-0' : 'w-20 -translate-x-full md:translate-x-0'} 
+        transition-all duration-500 ease-in-out
+        glass-panel rounded-none border-r border-white/5 flex flex-col absolute md:relative z-50 h-full
+      `}>
+        <div className="h-20 flex items-center justify-between px-6 border-b border-white/5">
+          {isSidebarOpen && (
+            <Link to="/" className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-[#00f2fe] to-[#4facfe] flex items-center gap-2">
+              <Camera size={28} className="text-[#00f2fe]" />
+              NexusAI
+            </Link>
+          )}
+          <button 
+            onClick={() => setSidebarOpen(!isSidebarOpen)}
+            className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+          >
+            <Menu size={24} />
           </button>
         </div>
-        
-        <nav className="flex-1 overflow-y-auto py-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-          <ul className="space-y-1 px-2">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.path;
-              const Icon = item.icon;
-              return (
-                <li key={item.path}>
-                  <Link
-                    to={item.path}
-                    className={`flex items-center p-3 rounded-xl transition-all ${
-                      isActive ? 'bg-primary/20 text-primary border border-primary/30' : 'hover:bg-slate-800 text-slate-300 hover:text-white'
-                    }`}
-                  >
-                    <Icon size={20} className="min-w-[20px]" />
-                    {isSidebarOpen && <span className="ml-3 truncate text-sm">{item.name}</span>}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-        
-        <div className="p-4 border-t border-slate-700/50">
-          <Link to="/about" className="flex items-center p-3 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-all">
-            <Info size={20} className="min-w-[20px]" />
-            {isSidebarOpen && <span className="ml-3 text-sm">About</span>}
+
+        <div className="flex-1 overflow-y-auto py-6 px-4 scrollbar-hide space-y-2">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+            
+            return (
+              <Link
+                key={item.name}
+                to={item.path}
+                className={`
+                  flex items-center px-4 py-4 rounded-2xl transition-all duration-300 group relative
+                  ${isActive 
+                    ? 'bg-gradient-to-r from-primary/20 to-blue-600/10 border border-primary/30 shadow-[0_0_20px_rgba(59,130,246,0.15)]' 
+                    : 'hover:bg-white/5 border border-transparent'}
+                `}
+                title={!isSidebarOpen ? item.name : ''}
+              >
+                {isActive && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-[#00f2fe] rounded-r-full shadow-[0_0_10px_#00f2fe]"></div>
+                )}
+                
+                <Icon size={22} className={`
+                  ${isActive ? 'text-[#00f2fe]' : 'text-slate-400 group-hover:text-white'} 
+                  transition-colors
+                `} />
+                
+                {isSidebarOpen && (
+                  <span className={`ml-4 font-bold ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'} transition-colors`}>
+                    {item.name}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Bottom Actions */}
+        <div className="p-4 border-t border-white/5 flex flex-col gap-3">
+          {isSidebarOpen && !audioEnabled && (
+            <button 
+              onClick={initAudio}
+              className="flex items-center justify-center gap-2 w-full py-3 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-500 rounded-xl font-bold transition-colors border border-yellow-500/30 text-sm"
+            >
+              <VolumeX size={16} /> Enable Sound/Voice
+            </button>
+          )}
+          {isSidebarOpen && audioEnabled && (
+            <div className="flex items-center justify-center gap-2 w-full py-3 bg-green-500/10 text-green-400 rounded-xl font-bold border border-green-500/20 text-sm">
+              <Volume2 size={16} /> Sound Enabled
+            </div>
+          )}
+
+          <Link
+            to="/about"
+            className="flex items-center px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors font-bold"
+          >
+            <Info size={22} />
+            {isSidebarOpen && <span className="ml-4">About</span>}
           </Link>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-4 pl-0 overflow-hidden flex flex-col">
-        <div className="glass-panel flex-1 overflow-y-auto p-6 relative">
+      <main className="flex-1 relative overflow-hidden flex flex-col">
+        {/* Mobile Menu Toggle */}
+        <button 
+          onClick={() => setSidebarOpen(true)}
+          className={`md:hidden absolute top-4 left-4 z-40 p-2 rounded-xl bg-slate-800/80 text-white backdrop-blur-md border border-slate-700 shadow-lg transition-opacity duration-300 ${isSidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        >
+          <Menu size={24} />
+        </button>
+
+        {/* Top Glow Effect */}
+        <div className="absolute top-[-10%] left-[20%] w-[60%] h-[30%] bg-primary/20 blur-[120px] rounded-full pointer-events-none z-0"></div>
+
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 relative z-10 scrollbar-hide">
           <Outlet />
         </div>
       </main>

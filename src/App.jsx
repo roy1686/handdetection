@@ -11,13 +11,12 @@ import SpeedTracker from './pages/SpeedTracker';
 import HandHeatmap from './pages/HandHeatmap';
 import GestureMemory from './pages/GestureMemory';
 import AboutPage from './pages/AboutPage';
+import ScreenshotCapture from './pages/ScreenshotCapture';
 
 // New Features
 import PicturePuzzle from './pages/PicturePuzzle';
 import TicTacToe from './pages/TicTacToe';
 import CatchGame from './pages/CatchGame';
-import SignLanguageDemo from './pages/SignLanguageDemo';
-
 function App() {
   return (
     <Router>
@@ -29,13 +28,13 @@ function App() {
           <Route path="air-canvas" element={<AirCanvas />} />
           <Route path="rock-paper-scissors" element={<RockPaperScissors />} />
           <Route path="calculator" element={<GestureCalculator />} />
+          <Route path="screenshot" element={<ScreenshotCapture />} />
           <Route path="speed-tracker" element={<SpeedTracker />} />
           <Route path="heatmap" element={<HandHeatmap />} />
           <Route path="memory" element={<GestureMemory />} />
           <Route path="picture-puzzle" element={<PicturePuzzle />} />
           <Route path="tic-tac-toe" element={<TicTacToe />} />
           <Route path="catch-game" element={<CatchGame />} />
-          <Route path="sign-language" element={<SignLanguageDemo />} />
         </Route>
         <Route path="/about" element={<AboutPage />} />
       </Routes>

@@ -1,10 +1,12 @@
 export function detectSignLanguage(landmarks, handedness) {
-  // A simple heuristic-based detection for ASL A, B, C, D, E.
   if (!landmarks || landmarks.length < 21) return null;
 
-  // Helpers to determine if fingers are folded
+  const isRightHand = handedness === 'Right';
+  
+  // Helpers
   const isFolded = (tipIdx, pipIdx) => landmarks[tipIdx].y > landmarks[pipIdx].y;
   const isStraight = (tipIdx, pipIdx) => landmarks[tipIdx].y < landmarks[pipIdx].y;
+  const dist = (p1, p2) => Math.hypot(landmarks[p1].x - landmarks[p2].x, landmarks[p1].y - landmarks[p2].y);
 
   const indexFolded = isFolded(8, 6);
   const middleFolded = isFolded(12, 10);
@@ -16,72 +18,65 @@ export function detectSignLanguage(landmarks, handedness) {
   const ringStraight = isStraight(16, 14);
   const pinkyStraight = isStraight(20, 18);
 
-  // Thumb rules (simplified)
-  const isRightHand = handedness === 'Right'; // Note: camera mirror might flip this logically
+  // Loosened thumb heuristics
   const thumbFolded = isRightHand 
-    ? landmarks[4].x > landmarks[5].x // Right hand mirrored: thumb x > index mcp x
-    : landmarks[4].x < landmarks[5].x;
-
+    ? landmarks[4].x > landmarks[5].x - 0.05
+    : landmarks[4].x < landmarks[5].x + 0.05;
   const thumbOut = !thumbFolded;
 
-  // Letter B: all fingers straight, thumb folded across palm
-  if (indexStraight && middleStraight && ringStraight && pinkyStraight && thumbFolded) {
-    return 'B';
-  }
+  const isTightFold = (tip, mcp) => landmarks[tip].y > landmarks[mcp].y + 0.05;
+  const tightE = isTightFold(8, 5) && isTightFold(12, 9) && isTightFold(16, 13) && isTightFold(20, 17);
 
-  // Letter D: index straight, others folded (often forming circle with thumb)
-  if (indexStraight && middleFolded && ringFolded && pinkyFolded) {
-    return 'D';
-  }
+  const distThumbIndex = dist(4, 8);
+  const distIndexMiddle = dist(8, 12);
 
-  // Letter E: all fingers tightly curled. Tips are below the MCPs (knuckles 5, 9, 13, 17)
-  const isTightFold = (tip, mcp) => landmarks[tip].y > landmarks[mcp].y;
-  if (isTightFold(8, 5) && isTightFold(12, 9) && isTightFold(16, 13) && isTightFold(20, 17)) {
-    return 'E';
-  }
+  // A: Fist with thumb to the side
+  if (indexFolded && middleFolded && ringFolded && pinkyFolded && thumbOut && !tightE) return 'A';
 
-  // Letter A: fingers folded (not necessarily tightly below MCP, but below PIP), thumb out
-  if (indexFolded && middleFolded && ringFolded && pinkyFolded && thumbOut) {
-    return 'A';
-  }
+  // B: Flat hand, thumb folded across palm
+  if (indexStraight && middleStraight && ringStraight && pinkyStraight && thumbFolded) return 'B';
 
-  // Letter C: Semi-curved hand. Hard to distinguish from just relaxed.
-  // We'll approximate: fingers are neither straight up nor tightly folded, and thumb is out.
-  // Check if distance between thumb tip and index tip is large, but all fingers are bent.
-  const distThumbIndex = Math.hypot(landmarks[4].x - landmarks[8].x, landmarks[4].y - landmarks[8].y);
-  if (distThumbIndex > 0.1 && indexFolded && middleFolded) {
-    // If not A, D, E, we might guess C if it's somewhat open.
-    // This is a very rough heuristic for C.
-    // For a better 'C', tips x should be significantly shifted.
-    return 'C';
-  }
+  // C: Semi-curved hand
+  if (distThumbIndex > 0.10 && distThumbIndex < 0.5 && indexFolded && middleFolded && ringFolded) return 'C';
 
-  // Letter L: Index straight, thumb out, others folded
-  if (indexStraight && middleFolded && ringFolded && pinkyFolded && thumbOut) {
-    return 'L';
-  }
+  // D: Index straight, others folded
+  if (indexStraight && middleFolded && ringFolded && pinkyFolded && dist(4, 12) < 0.25) return 'D';
 
-  // Letter Y: Thumb and pinky out, others folded
-  if (indexFolded && middleFolded && ringFolded && pinkyStraight && thumbOut) {
-    return 'Y';
-  }
+  // E: All fingers tightly curled
+  if (tightE && thumbFolded) return 'E';
 
-  // Letter F: Index and thumb touching, middle, ring, pinky straight
-  if (distThumbIndex < 0.1 && middleStraight && ringStraight && pinkyStraight) {
-    return 'F';
-  }
+  // F: Index and thumb touching, middle, ring, pinky straight
+  if (distThumbIndex < 0.20 && middleStraight && ringStraight && pinkyStraight) return 'F';
 
-  // Letter V: Index and middle straight, ring and pinky folded, thumb folded
-  if (indexStraight && middleStraight && ringFolded && pinkyFolded && thumbFolded) {
-    // V vs W vs others: check distance between index and middle to ensure it's a V? 
-    // We can just rely on the folded state
-    return 'V';
-  }
+  // G: Index straight horizontal, others folded
+  if (indexStraight && middleFolded && ringFolded && pinkyFolded && thumbOut && Math.abs(landmarks[8].y - landmarks[5].y) < 0.25) return 'G';
 
-  // Letter W: Index, middle, ring straight, pinky folded, thumb folded
-  if (indexStraight && middleStraight && ringStraight && pinkyFolded && thumbFolded) {
-    return 'W';
-  }
+  // H: Index and middle straight and horizontal, others folded
+  if (indexStraight && middleStraight && ringFolded && pinkyFolded && thumbFolded && Math.abs(landmarks[8].y - landmarks[5].y) < 0.25) return 'H';
+
+  // I: Pinky straight, others folded
+  if (indexFolded && middleFolded && ringFolded && pinkyStraight && thumbFolded) return 'I';
+
+  // L: Index straight up, thumb out, others folded
+  if (indexStraight && middleFolded && ringFolded && pinkyFolded && thumbOut && Math.abs(landmarks[8].y - landmarks[5].y) > 0.05) return 'L';
+
+  // O: Fingers curved to touch thumb
+  if (distThumbIndex < 0.20 && dist(4, 12) < 0.20 && dist(4, 16) < 0.20) return 'O';
+
+  // S: Fist with thumb over fingers
+  if (indexFolded && middleFolded && ringFolded && pinkyFolded && dist(4, 10) < 0.25 && thumbFolded) return 'S';
+
+  // U: Index and middle straight and touching
+  if (indexStraight && middleStraight && ringFolded && pinkyFolded && distIndexMiddle < 0.08) return 'U';
+
+  // V: Index and middle straight and separated
+  if (indexStraight && middleStraight && ringFolded && pinkyFolded && distIndexMiddle >= 0.08) return 'V';
+
+  // W: Index, middle, ring straight
+  if (indexStraight && middleStraight && ringStraight && pinkyFolded && distIndexMiddle >= 0.05) return 'W';
+
+  // Y: Thumb and pinky out, others folded
+  if (indexFolded && middleFolded && ringFolded && pinkyStraight && thumbOut) return 'Y';
 
   return null;
 }

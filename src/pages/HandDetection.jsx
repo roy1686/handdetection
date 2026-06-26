@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import WebcamOverlay from '../components/WebcamOverlay';
 import { drawHandResults } from '../utils/drawHands';
-import { Activity } from 'lucide-react';
+import { countFingers } from '../utils/gestureMath';
+import { Activity, Hand } from 'lucide-react';
 
 export default function HandDetection() {
   const [status, setStatus] = useState('Initializing...');
   const [fps, setFps] = useState(0);
   const [handCount, setHandCount] = useState(0);
+  const [totalFingers, setTotalFingers] = useState(0);
 
   let lastFrameTime = performance.now();
 
@@ -20,7 +22,18 @@ export default function HandDetection() {
     setFps((prev) => Math.round(prev * 0.9 + currentFps * 0.1));
     
     setStatus(results.multiHandLandmarks ? 'Tracking Active' : 'Waiting for hands...');
-    setHandCount(results.multiHandLandmarks ? results.multiHandLandmarks.length : 0);
+    
+    let hands = 0;
+    let fingers = 0;
+    if (results.multiHandLandmarks && results.multiHandedness) {
+      hands = results.multiHandLandmarks.length;
+      for (let i = 0; i < hands; i++) {
+        fingers += countFingers(results.multiHandLandmarks[i], results.multiHandedness[i].label);
+      }
+    }
+    
+    setHandCount(hands);
+    setTotalFingers(fingers);
 
     // Draw Hands
     drawHandResults(results, ctx, canvas);
@@ -47,10 +60,14 @@ export default function HandDetection() {
 
       <div className="flex-1 relative rounded-2xl overflow-hidden border border-slate-700/50 bg-black">
         <WebcamOverlay onResults={handleResults}>
-          <div className="absolute top-4 left-4">
-            <div className="glass-panel px-4 py-2">
-              <span className="text-sm font-medium text-slate-300">Hands Detected: </span>
-              <span className="text-xl font-bold ml-2 text-white">{handCount}</span>
+          <div className="absolute top-4 left-4 flex flex-col gap-3">
+            <div className="glass-panel px-4 py-2 flex items-center justify-between min-w-[160px]">
+              <span className="text-sm font-medium text-slate-300 flex items-center gap-2"><Hand size={16}/> Hands: </span>
+              <span className="text-xl font-bold text-white">{handCount}</span>
+            </div>
+            <div className="glass-panel px-4 py-2 flex items-center justify-between min-w-[160px]">
+              <span className="text-sm font-medium text-slate-300 flex items-center gap-2"><Hand size={16} className="rotate-45"/> Fingers: </span>
+              <span className="text-xl font-bold text-primary">{totalFingers}</span>
             </div>
           </div>
         </WebcamOverlay>

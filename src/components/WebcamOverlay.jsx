@@ -28,7 +28,7 @@ export default function WebcamOverlay({ onResults, children, mirror = true }) {
     <div ref={containerRef} className="relative w-full h-full min-h-[400px] flex items-center justify-center bg-black/50 rounded-2xl overflow-hidden shadow-2xl">
       <video
         ref={videoRef}
-        className={`absolute w-full h-full object-fill ${mirror ? '-scale-x-100' : ''}`}
+        className={`absolute w-full h-full object-cover ${mirror ? '-scale-x-100' : ''}`}
         autoPlay
         playsInline
       />
@@ -38,11 +38,11 @@ export default function WebcamOverlay({ onResults, children, mirror = true }) {
       */}
       <canvas
         ref={canvasRef}
-        className={`absolute w-full h-full object-fill ${mirror ? '-scale-x-100' : ''} pointer-events-none`}
+        className={`absolute w-full h-full object-cover ${mirror ? '-scale-x-100' : ''} pointer-events-none`}
         width={1280}
         height={720}
       />
-      <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between p-4">
+      <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between p-4 [&>*]:pointer-events-auto">
         {children}
       </div>
     </div>

@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import WebcamOverlay from '../components/WebcamOverlay';
 import { drawHandResults } from '../utils/drawHands';
-import { Puzzle } from 'lucide-react';
+import { Puzzle, HelpCircle } from 'lucide-react';
 
 const IMAGE_URL = 'https://picsum.photos/500/500';
 
@@ -16,6 +16,7 @@ export default function PicturePuzzle() {
   const [level, setLevel] = useState('Very Easy');
   const [gameState, setGameState] = useState('idle'); // idle, playing, won
   const [moves, setMoves] = useState(0);
+  const [showInstructions, setShowInstructions] = useState(true);
 
   const gameCanvasRef = useRef(null);
   const imageRef = useRef(null);
@@ -37,13 +38,13 @@ export default function PicturePuzzle() {
   const startGame = () => {
     setGameState('playing');
     setMoves(0);
+    setShowInstructions(false);
     
     const gridSize = LEVELS[level];
     const targetAreaSize = 500;
     const pieceW = targetAreaSize / gridSize;
     const pieceH = targetAreaSize / gridSize;
 
-    // Right half center for the grid
     const targetX = 640 + (640 - targetAreaSize) / 2;
     const targetY = (720 - targetAreaSize) / 2;
 
@@ -56,7 +57,7 @@ export default function PicturePuzzle() {
           id: `${r}-${c}`,
           row: r,
           col: c,
-          x: Math.random() * (600 - pieceW) + 20, // scatter on left half
+          x: Math.random() * (600 - pieceW) + 20,
           y: Math.random() * (680 - pieceH) + 20,
           correctX: targetX + c * pieceW,
           correctY: targetY + r * pieceH,
@@ -65,7 +66,6 @@ export default function PicturePuzzle() {
       }
     }
     
-    // Shuffle display order
     piecesRef.current = newPieces.sort(() => Math.random() - 0.5);
     draggedPieceRef.current = null;
   };
@@ -109,7 +109,6 @@ export default function PicturePuzzle() {
           const sxW = imgW / gridSize;
           const sxH = imgH / gridSize;
 
-          // Draw snapped pieces first, then unsnapped, then dragged piece on top
           const snapped = [];
           const unsnapped = [];
           
@@ -144,7 +143,7 @@ export default function PicturePuzzle() {
             drawPiece(draggedPieceRef.current);
           }
 
-          // Draw reference image in top right corner
+          // Reference image
           ctx.globalAlpha = 0.8;
           ctx.drawImage(imageRef.current, canvas.width - 170, 20, 150, 150);
           ctx.strokeStyle = '#fff';
@@ -186,9 +185,8 @@ export default function PicturePuzzle() {
       const thumbY = thumbTip.y * webcamCanvas.height;
       
       const distance = Math.hypot(x - thumbX, y - thumbY);
-      const isPinching = distance < 40; // 40 pixels threshold for pinch
+      const isPinching = distance < 60; // Increased threshold
       
-      // Draw a cursor
       const gameCtx = gameCanvasRef.current?.getContext('2d');
       if (gameCtx) {
         gameCtx.beginPath();
@@ -201,15 +199,14 @@ export default function PicturePuzzle() {
       }
 
       if (isPinching && !pinchRef.current) {
-        // Just pinched, try to grab a piece
         pinchRef.current = true;
         const { pieceWidth, pieceHeight } = gridInfoRef.current;
         
-        // Find piece under cursor (search backwards to grab top piece)
         let grabbed = null;
         for (let i = piecesRef.current.length - 1; i >= 0; i--) {
           const p = piecesRef.current[i];
-          if (!p.isSnapped && x >= p.x && x <= p.x + pieceWidth && y >= p.y && y <= p.y + pieceHeight) {
+          // Looser bounding box for easier grabbing
+          if (!p.isSnapped && x >= p.x - 20 && x <= p.x + pieceWidth + 20 && y >= p.y - 20 && y <= p.y + pieceHeight + 20) {
             grabbed = p;
             break;
           }
@@ -217,30 +214,26 @@ export default function PicturePuzzle() {
         
         if (grabbed) {
           draggedPieceRef.current = grabbed;
-          // Calculate offset so piece doesn't snap its top-left to cursor
           grabbed.offsetX = x - grabbed.x;
           grabbed.offsetY = y - grabbed.y;
         }
       } else if (isPinching && pinchRef.current && draggedPieceRef.current) {
-        // Dragging
         const p = draggedPieceRef.current;
-        p.x = x - p.offsetX;
-        p.y = y - p.offsetY;
+        // Smoothing
+        p.x = p.x * 0.5 + (x - p.offsetX) * 0.5;
+        p.y = p.y * 0.5 + (y - p.offsetY) * 0.5;
       } else if (!isPinching && pinchRef.current) {
-        // Released
         pinchRef.current = false;
         if (draggedPieceRef.current) {
           setMoves(m => m + 1);
           const p = draggedPieceRef.current;
           
-          // Check if close to correct spot
           const distToTarget = Math.hypot(p.x - p.correctX, p.y - p.correctY);
-          if (distToTarget < 50) {
+          if (distToTarget < 80) { // Increased snap threshold
             p.x = p.correctX;
             p.y = p.correctY;
             p.isSnapped = true;
             
-            // Check win
             if (piecesRef.current.every(piece => piece.isSnapped)) {
               setGameState('won');
             }
@@ -258,52 +251,72 @@ export default function PicturePuzzle() {
     <div className="h-full flex flex-col">
       <div className="mb-4 flex flex-wrap gap-4 items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold mb-1 text-white">Picture Puzzle</h2>
+          <h2 className="text-2xl font-bold mb-1 text-white flex items-center gap-2">
+            <Puzzle className="text-primary"/> Picture Puzzle
+          </h2>
           <p className="text-slate-400 text-sm">Pinch index and thumb to drag and drop pieces into the grid.</p>
         </div>
         
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-center">
+          <button onClick={() => setShowInstructions(!showInstructions)} className="p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
+            <HelpCircle size={24} />
+          </button>
           <select 
             value={level} 
             onChange={(e) => setLevel(e.target.value)}
             disabled={gameState === 'playing'}
-            className="bg-slate-800 text-white border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-primary"
+            className="bg-slate-800 text-white border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-primary font-bold shadow-lg"
           >
             {Object.keys(LEVELS).map(lvl => (
               <option key={lvl} value={lvl}>{lvl} ({LEVELS[lvl]}x{LEVELS[lvl]})</option>
             ))}
           </select>
 
-          <div className="glass-panel px-4 py-2 text-center">
-            <span className="block text-xs text-slate-400">MOVES</span>
-            <span className="text-xl font-bold text-primary">{moves}</span>
+          <div className="glass-panel px-6 py-2 text-center border-b-4 border-b-primary shadow-xl">
+            <span className="block text-[10px] text-slate-400 uppercase font-black tracking-widest">Moves</span>
+            <span className="text-2xl font-black text-white">{moves}</span>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 relative rounded-2xl overflow-hidden border border-slate-700/50 bg-black">
+      <div className="flex-1 relative rounded-2xl overflow-hidden border border-slate-700/50 bg-black shadow-2xl">
         <WebcamOverlay onResults={handleResults}>
           <canvas
             ref={gameCanvasRef}
             className="absolute top-0 left-0 w-full h-full pointer-events-none"
           />
           
+          {showInstructions && gameState === 'idle' && (
+             <div className="absolute top-4 right-4 z-50 glass-panel p-6 max-w-sm border border-primary/30 shadow-2xl bg-slate-900/90 backdrop-blur-xl">
+               <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2 border-b border-slate-700 pb-2">
+                 <HelpCircle className="text-primary"/> How to Play
+               </h3>
+               <p className="text-sm text-slate-300 mb-4 leading-relaxed">
+                 Use the <strong>Pinch Gesture</strong> to grab puzzle pieces and move them to their correct spot on the grid.
+               </p>
+               <img src="/instructions/instruction_pinch_1782396757000.png" alt="Pinch Gesture" className="w-full rounded-xl border border-slate-700 shadow-md mb-2" />
+               <button onClick={() => setShowInstructions(false)} className="mt-4 w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-bold transition-colors">Got it!</button>
+             </div>
+          )}
+
           {gameState === 'idle' && (
-            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center pointer-events-auto">
-              <Puzzle size={64} className="text-primary mb-6 animate-bounce" />
-              <button onClick={startGame} className="px-8 py-4 bg-primary hover:bg-blue-600 rounded-xl font-bold text-white transition-colors text-xl">
-                Start Puzzle
+            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center pointer-events-auto backdrop-blur-sm">
+              <Puzzle size={80} className="text-primary mb-6 animate-float drop-shadow-[0_0_20px_rgba(59,130,246,0.8)]" />
+              <button onClick={startGame} className="px-10 py-5 bg-gradient-to-r from-primary to-blue-600 hover:from-blue-500 hover:to-blue-400 rounded-2xl font-black text-white transition-all transform hover:scale-105 text-2xl shadow-[0_0_30px_rgba(59,130,246,0.4)]">
+                START PUZZLE
               </button>
             </div>
           )}
 
           {gameState === 'won' && (
-            <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center pointer-events-auto">
-              <h3 className="text-5xl font-extrabold text-green-400 mb-4 drop-shadow-lg">PUZZLE SOLVED!</h3>
-              <p className="text-2xl text-white mb-8">Moves: {moves}</p>
-              <button onClick={startGame} className="px-8 py-4 bg-primary rounded-xl font-bold text-white hover:bg-blue-600 transition-colors text-xl">
-                Play Again
-              </button>
+            <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center pointer-events-auto backdrop-blur-md">
+              <div className="glass-panel p-12 flex flex-col items-center border border-green-500/50 shadow-[0_0_50px_rgba(34,197,94,0.3)] text-center animate-in zoom-in duration-500">
+                <h3 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600 mb-4 drop-shadow-lg uppercase tracking-wider">Solved!</h3>
+                <p className="text-2xl text-slate-300 mb-8 font-medium">Completed in <span className="text-white font-black">{moves}</span> moves</p>
+                <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 rounded-xl font-bold text-white transition-all transform hover:scale-105 text-xl shadow-lg">
+                  Play Again
+                </button>
+              </div>
             </div>
           )}
         </WebcamOverlay>
