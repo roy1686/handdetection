@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import DashboardLayout from './components/DashboardLayout';
 import HandDetection from './pages/HandDetection';
@@ -12,15 +12,19 @@ import HandHeatmap from './pages/HandHeatmap';
 import GestureMemory from './pages/GestureMemory';
 import AboutPage from './pages/AboutPage';
 import ScreenshotCapture from './pages/ScreenshotCapture';
+import { AnimatePresence } from 'framer-motion';
 
 // New Features
 import PicturePuzzle from './pages/PicturePuzzle';
 import TicTacToe from './pages/TicTacToe';
 import CatchGame from './pages/CatchGame';
-function App() {
+
+function AnimatedRoutes() {
+  const location = useLocation();
+  
   return (
-    <Router>
-      <Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
         <Route path="/" element={<LandingPage />} />
         <Route path="/app" element={<DashboardLayout />}>
           <Route index element={<HandDetection />} />
@@ -38,6 +42,14 @@ function App() {
         </Route>
         <Route path="/about" element={<AboutPage />} />
       </Routes>
+    </AnimatePresence>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AnimatedRoutes />
     </Router>
   );
 }

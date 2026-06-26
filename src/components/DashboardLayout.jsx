@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, useLocation, useOutlet } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Hand, LayoutDashboard, Scissors, Edit3, Calculator, Activity, Map, Brain, Info, Menu, Puzzle, CircleDashed, ArrowDownCircle, Languages, Aperture, Code, Layers, Cpu, Heart } from 'lucide-react';
+import AnimatedPage from './AnimatedPage';
 
 const navItems = [
   { name: 'Hand Detection', path: '/app', icon: Camera },
@@ -17,11 +19,36 @@ const navItems = [
   { name: 'Catch Game', path: '/app/catch-game', icon: ArrowDownCircle },
 ];
 
+const sidebarVariants = {
+  open: { width: '18rem', transition: { type: 'spring', stiffness: 200, damping: 20 } },
+  closed: { width: '5rem', transition: { type: 'spring', stiffness: 200, damping: 20 } },
+  mobileOpen: { x: 0, transition: { type: 'spring', stiffness: 200, damping: 20 } },
+  mobileClosed: { x: '-100%', transition: { type: 'spring', stiffness: 200, damping: 20 } }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -20 },
+  show: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+};
+
 export default function DashboardLayout() {
   const location = useLocation();
+  const outlet = useOutlet();
   const [isSidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
+  const isMobile = window.innerWidth <= 768;
 
-  // Close sidebar on mobile when route changes
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     if (window.innerWidth <= 768) {
       setSidebarOpen(false);
@@ -29,28 +56,38 @@ export default function DashboardLayout() {
   }, [location.pathname]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#030712]">
+    <div className="flex h-screen overflow-hidden bg-[#030712] selection:bg-primary/30">
       {/* Mobile Backdrop Overlay */}
-      {isSidebarOpen && (
-        <div 
-          className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {isSidebarOpen && isMobile && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Sidebar */}
-      <aside className={`
-        ${isSidebarOpen ? 'w-72 translate-x-0' : 'w-20 -translate-x-full md:translate-x-0'} 
-        transition-all duration-500 ease-in-out
-        glass-panel rounded-none border-r border-white/5 flex flex-col absolute md:relative z-50 h-full
-      `}>
-        <div className="h-20 flex items-center justify-between px-6 border-b border-white/5">
-          {isSidebarOpen && (
-            <Link to="/" className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-[#00f2fe] to-[#4facfe] flex items-center gap-2">
-              <Camera size={28} className="text-[#00f2fe]" />
-              Gesture AI
-            </Link>
-          )}
+      <motion.aside 
+        variants={sidebarVariants}
+        initial={isMobile ? "mobileClosed" : "closed"}
+        animate={isMobile ? (isSidebarOpen ? "mobileOpen" : "mobileClosed") : (isSidebarOpen ? "open" : "closed")}
+        className="glass-panel rounded-none border-r border-white/5 flex flex-col absolute md:relative z-50 h-full overflow-hidden"
+      >
+        <div className="h-20 flex items-center justify-between px-6 border-b border-white/5 shrink-0">
+          <AnimatePresence>
+            {isSidebarOpen && (
+              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="whitespace-nowrap">
+                <Link to="/" className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-[#00f2fe] to-[#4facfe] flex items-center gap-2">
+                  <Camera size={28} className="text-[#00f2fe]" />
+                  Gesture AI
+                </Link>
+              </motion.div>
+            )}
+          </AnimatePresence>
           <button 
             onClick={() => setSidebarOpen(!isSidebarOpen)}
             className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
@@ -59,69 +96,107 @@ export default function DashboardLayout() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-6 px-4 scrollbar-hide space-y-2">
+        <motion.div 
+          className="flex-1 overflow-y-auto py-6 px-3 scrollbar-hide space-y-1 relative"
+          initial="hidden"
+          animate="show"
+          variants={{
+            show: {
+              transition: { staggerChildren: 0.05 }
+            }
+          }}
+        >
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             
             return (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`
-                  flex items-center px-4 py-4 rounded-2xl transition-all duration-300 group relative
-                  ${isActive 
-                    ? 'bg-gradient-to-r from-primary/20 to-blue-600/10 border border-primary/30 shadow-[0_0_20px_rgba(59,130,246,0.15)]' 
-                    : 'hover:bg-white/5 border border-transparent'}
-                `}
-                title={!isSidebarOpen ? item.name : ''}
-              >
+              <motion.div variants={itemVariants} key={item.name} className="relative">
                 {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-[#00f2fe] rounded-r-full shadow-[0_0_10px_#00f2fe]"></div>
+                  <motion.div
+                    layoutId="activeNavIndicator"
+                    className="absolute inset-0 bg-gradient-to-r from-primary/20 to-blue-600/10 border border-primary/30 shadow-[0_0_20px_rgba(59,130,246,0.15)] rounded-2xl"
+                    initial={false}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
                 )}
-                
-                <Icon size={22} className={`
-                  ${isActive ? 'text-[#00f2fe]' : 'text-slate-400 group-hover:text-white'} 
-                  transition-colors
-                `} />
-                
-                {isSidebarOpen && (
-                  <span className={`ml-4 font-bold ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'} transition-colors`}>
-                    {item.name}
-                  </span>
-                )}
-              </Link>
+                <Link
+                  to={item.path}
+                  className={`
+                    relative flex items-center px-4 py-4 rounded-2xl transition-all duration-300 group
+                    ${!isActive ? 'hover:bg-white/5 border border-transparent' : ''}
+                  `}
+                  title={!isSidebarOpen ? item.name : ''}
+                >
+                  {isActive && (
+                    <motion.div layoutId="activeNavEdge" className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-[#00f2fe] rounded-r-full shadow-[0_0_10px_#00f2fe]"></motion.div>
+                  )}
+                  
+                  <Icon size={22} className={`
+                    relative z-10 shrink-0
+                    ${isActive ? 'text-[#00f2fe]' : 'text-slate-400 group-hover:text-white'} 
+                    transition-colors
+                  `} />
+                  
+                  <AnimatePresence>
+                    {isSidebarOpen && (
+                      <motion.span 
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10 }}
+                        className={`ml-4 font-bold whitespace-nowrap relative z-10 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'} transition-colors`}
+                      >
+                        {item.name}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </Link>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
 
         {/* Bottom Actions */}
-        <div className="p-4 border-t border-white/5 flex flex-col gap-3">
+        <div className="p-4 border-t border-white/5 shrink-0">
           <Link
             to="/about"
-            className="flex items-center px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors font-bold"
+            className="flex items-center px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors font-bold overflow-hidden"
           >
-            <Info size={22} />
-            {isSidebarOpen && <span className="ml-4">About</span>}
+            <Info size={22} className="shrink-0" />
+            <AnimatePresence>
+              {isSidebarOpen && (
+                <motion.span initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="ml-4 whitespace-nowrap">
+                  About
+                </motion.span>
+              )}
+            </AnimatePresence>
           </Link>
         </div>
-      </aside>
+      </motion.aside>
 
       {/* Main Content */}
-      <main className="flex-1 relative overflow-hidden flex flex-col">
+      <main className="flex-1 relative overflow-hidden flex flex-col bg-[#030712]">
         {/* Mobile Menu Toggle */}
-        <button 
-          onClick={() => setSidebarOpen(true)}
-          className={`md:hidden absolute top-4 left-4 z-40 p-2 rounded-xl bg-slate-800/80 text-white backdrop-blur-md border border-slate-700 shadow-lg transition-opacity duration-300 ${isSidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-        >
-          <Menu size={24} />
-        </button>
-
-        {/* Top Glow Effect */}
-        <div className="absolute top-[-10%] left-[20%] w-[60%] h-[30%] bg-primary/20 blur-[120px] rounded-full pointer-events-none z-0"></div>
+        <AnimatePresence>
+          {!isSidebarOpen && isMobile && (
+            <motion.button 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              onClick={() => setSidebarOpen(true)}
+              className="absolute top-4 left-4 z-40 p-2 rounded-xl bg-slate-800/80 text-white backdrop-blur-md border border-slate-700 shadow-lg"
+            >
+              <Menu size={24} />
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8 relative z-10 scrollbar-hide">
-          <Outlet />
+          <AnimatePresence mode="wait">
+            <AnimatedPage key={location.pathname}>
+              {outlet}
+            </AnimatedPage>
+          </AnimatePresence>
         </div>
       </main>
     </div>

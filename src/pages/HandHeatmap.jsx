@@ -177,8 +177,7 @@ export default function HandHeatmap() {
         </div>
       </div>
 
-      <div className="flex-1 relative rounded-2xl overflow-hidden border border-slate-700/50 bg-black flex flex-col lg:flex-row">
-        
+      <div className="flex-1 relative rounded-2xl overflow-hidden border border-slate-700/50 bg-black flex flex-col lg:flex-row shadow-xl">
         <div className="w-full lg:w-3/4 h-full relative">
           <WebcamOverlay onResults={handleResults}>
             {/* Grid Overlay for reference */}

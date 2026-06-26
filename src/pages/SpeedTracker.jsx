@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import WebcamOverlay from '../components/WebcamOverlay';
 import { drawHandResults } from '../utils/drawHands';
 import { Activity, Trophy, Timer, Flame } from 'lucide-react';
+import CountUp from '../components/reactbits/CountUp';
 
 export default function SpeedTracker() {
   const [speed, setSpeed] = useState(0);
@@ -148,7 +149,7 @@ export default function SpeedTracker() {
             <div className="absolute top-0 right-0 p-2 text-red-500 opacity-20 group-hover:opacity-100 transition-opacity"><Flame size={48} /></div>
             <span className="block text-slate-500 text-xs uppercase font-bold tracking-widest mb-2">Session Max Speed</span>
             <span className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-500 drop-shadow-[0_0_20px_rgba(249,115,22,0.3)]">
-              {maxSpeed}
+              <CountUp key={maxSpeed} to={maxSpeed} duration={0.3} />
             </span>
             <span className="text-slate-500 text-sm ml-2">px/s</span>
           </div>

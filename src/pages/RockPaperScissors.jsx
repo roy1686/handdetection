@@ -3,6 +3,8 @@ import WebcamOverlay from '../components/WebcamOverlay';
 import { drawHandResults } from '../utils/drawHands';
 import { countFingers } from '../utils/gestureMath';
 import { Scissors, ShieldQuestion, HelpCircle, Trophy } from 'lucide-react';
+import SplitText from '../components/reactbits/SplitText';
+import Ballpit from '../components/reactbits/Ballpit';
 
 const CHOICES = ['Rock', 'Paper', 'Scissors'];
 
@@ -25,6 +27,7 @@ export default function RockPaperScissors() {
   const [matchWinner, setMatchWinner] = useState(null);
   const [showInstructions, setShowInstructions] = useState(true);
   const [detecting, setDetecting] = useState(null);
+  const [roundFinished, setRoundFinished] = useState(false);
 
   const lastPlayerChoiceRef = useRef(null);
   const lockTimerRef = useRef(null);
@@ -72,10 +75,22 @@ export default function RockPaperScissors() {
 
     setScores({ player: pScore, ai: aScore });
     setRoundsPlayed(r => r + 1);
+  };
 
+  const handleNextGame = () => {
     const neededToWin = mode === '1' ? 1 : mode === '3' ? 2 : 3;
-    if (pScore >= neededToWin) setMatchWinner('Player');
-    else if (aScore >= neededToWin) setMatchWinner('AI');
+    if (scores.player >= neededToWin) {
+      setMatchWinner('Player');
+      setRoundFinished(false);
+    } else if (scores.ai >= neededToWin) {
+      setMatchWinner('AI');
+      setRoundFinished(false);
+    } else {
+      setRoundFinished(false);
+      setPlayerChoice(null);
+      setAiChoice(null);
+      setResult('');
+    }
   };
 
   const resetMatch = () => {
@@ -85,12 +100,13 @@ export default function RockPaperScissors() {
     setScores({ player: 0, ai: 0 });
     setRoundsPlayed(0);
     setMatchWinner(null);
+    setRoundFinished(false);
   };
 
   const handleResults = (results, ctx, canvas) => {
     drawHandResults(results, ctx, canvas);
 
-    if (matchWinner) return;
+    if (matchWinner || roundFinished) return;
 
     let fingers = -1;
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
@@ -127,6 +143,7 @@ export default function RockPaperScissors() {
           
           currentFingersRef.current = null;
           setDetecting(null);
+          setRoundFinished(true);
         }, 1500); // Need to hold gesture for 1.5s
       }
     } else {
@@ -215,28 +232,35 @@ export default function RockPaperScissors() {
             )}
 
             {matchWinner && (
-              <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center pointer-events-auto backdrop-blur-md animate-in fade-in duration-500 z-40">
-                <Trophy size={80} className={`mb-6 drop-shadow-2xl ${matchWinner === 'Player' ? 'text-yellow-400' : 'text-red-500'}`} />
-                <h3 className="text-6xl font-black mb-4 text-white uppercase tracking-wider">
-                  {matchWinner === 'Player' ? 'Tournament Won!' : 'Defeated!'}
+              <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center pointer-events-auto backdrop-blur-md animate-in zoom-in duration-300 z-50 overflow-hidden">
+                {matchWinner === 'Player' && <Ballpit count={100} gravity={0.3} bounce={0.9} colors={['#00f2fe', '#4facfe', '#fbbf24', '#f87171']} />}
+                <Trophy size={80} className={`mb-6 drop-shadow-2xl relative z-10 ${matchWinner === 'Player' ? 'text-yellow-400' : 'text-red-500'}`} />
+                <h3 className="text-6xl font-black mb-4 text-white uppercase tracking-wider relative z-10">
+                  <SplitText text={matchWinner === 'Player' ? 'TOURNAMENT WON!' : 'DEFEATED!'} delay={50} />
                 </h3>
-                <p className="text-2xl text-slate-300 mb-8 font-medium">Final Score: <span className="text-primary">{scores.player}</span> - <span className="text-red-400">{scores.ai}</span></p>
-                <button onClick={resetMatch} className="px-10 py-4 bg-gradient-to-r from-primary to-blue-600 hover:from-blue-500 hover:to-blue-400 rounded-xl font-bold text-white transition-all transform hover:scale-105 text-xl shadow-lg">
+                <p className="text-2xl text-slate-300 mb-8 font-medium relative z-10">Final Score: <span className="text-primary">{scores.player}</span> - <span className="text-red-400">{scores.ai}</span></p>
+                <button onClick={resetMatch} className="px-10 py-4 bg-gradient-to-r from-primary to-blue-600 hover:from-blue-500 hover:to-blue-400 rounded-xl font-bold text-white transition-all transform hover:scale-105 text-xl shadow-lg relative z-10">
                   Play Again
                 </button>
               </div>
             )}
             
-            {!matchWinner && playerChoice && (
-              <div className="absolute bottom-8 left-0 right-0 flex justify-center animate-out fade-out duration-1000 delay-1000 fill-mode-forwards">
-                <div className="bg-black/60 backdrop-blur-md px-8 py-4 rounded-full border border-primary/30 flex items-center gap-4 text-white shadow-2xl">
-                  <span className="text-2xl font-bold text-primary">You: {playerChoice}</span>
-                  <span className="text-slate-500 font-black px-4">VS</span>
-                  <span className="text-2xl font-bold text-red-400">AI: {aiChoice}</span>
+            {!matchWinner && roundFinished && playerChoice && (
+              <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center pointer-events-auto backdrop-blur-md animate-in fade-in duration-300 z-40">
+                <div className="bg-black/60 backdrop-blur-md px-8 py-6 rounded-full border border-primary/30 flex items-center gap-6 text-white shadow-2xl mb-8">
+                  <span className="text-4xl font-bold text-primary">You: {playerChoice}</span>
+                  <span className="text-slate-500 font-black px-4 text-2xl">VS</span>
+                  <span className="text-4xl font-bold text-red-400">AI: {aiChoice}</span>
                 </div>
+                <h3 className={`text-6xl font-black mb-10 uppercase tracking-wider ${result.includes('Tie') ? 'text-yellow-400' : result.includes('Player') ? 'text-primary' : 'text-red-500'}`}>
+                  {result}
+                </h3>
+                <button onClick={handleNextGame} className="px-12 py-4 bg-gradient-to-r from-primary to-blue-600 hover:from-blue-500 hover:to-blue-400 rounded-xl font-bold text-white transition-all transform hover:scale-105 text-2xl shadow-lg">
+                  Next Game
+                </button>
               </div>
             )}
-            {!matchWinner && detecting && (
+            {!matchWinner && !roundFinished && detecting && (
               <div className="absolute top-8 left-0 right-0 flex justify-center animate-in fade-in duration-300">
                 <div className="bg-black/80 backdrop-blur-md px-8 py-4 rounded-full border border-yellow-500/50 flex items-center gap-4 text-white shadow-[0_0_20px_rgba(234,179,8,0.3)]">
                   <div className="w-6 h-6 rounded-full border-4 border-yellow-500 border-t-transparent animate-spin"></div>

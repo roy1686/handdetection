@@ -3,6 +3,7 @@ import WebcamOverlay from '../components/WebcamOverlay';
 import { drawHandResults } from '../utils/drawHands';
 import { countFingers } from '../utils/gestureMath';
 import { Trash2, Download, Play, Square, Circle, Triangle, PenTool } from 'lucide-react';
+import ClickSpark from '../components/reactbits/ClickSpark';
 
 const COLORS = [
   { name: 'Red', value: '#ef4444' },
@@ -68,12 +69,19 @@ export default function AirCanvas() {
 
       const drawCtx = drawingCanvasRef.current.getContext('2d');
 
-      // Drawing: 1 finger up (index)
-      // Eraser: 0 fingers up (fist)
       const isEraser = fingersUp === 0;
       const isDrawing = fingersUp === 1;
 
       if (isDrawing || isEraser) {
+        let x, y;
+        if (isEraser) {
+          x = (1 - landmarks[9].x) * drawingCanvasRef.current.width;
+          y = landmarks[9].y * drawingCanvasRef.current.height;
+        } else {
+          x = (1 - indexTip.x) * drawingCanvasRef.current.width;
+          y = indexTip.y * drawingCanvasRef.current.height;
+        }
+
         if (prevPosRef.current) {
           drawStrokeSegment(drawCtx, prevPosRef.current, {x, y}, color, thickness, isEraser);
           
@@ -266,7 +274,11 @@ export default function AirCanvas() {
         </div>
       </div>
 
-      <div className="flex-1 relative rounded-2xl overflow-hidden border border-slate-700/50 bg-black">
+      <div className="flex-1 relative rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-900 shadow-2xl group">
+        <ClickSpark sparkColor={color} sparkSize={12} sparkRadius={20} sparkCount={10} duration={600} />
+        
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none"></div>
+
         <WebcamOverlay onResults={handleResults}>
           <canvas
             ref={drawingCanvasRef}
