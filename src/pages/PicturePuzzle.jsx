@@ -40,25 +40,35 @@ export default function PicturePuzzle() {
     setMoves(0);
     setShowInstructions(false);
     
+    const canvas = gameCanvasRef.current;
+    const canvasW = canvas && canvas.width > 0 ? canvas.width : 1280;
+    const canvasH = canvas && canvas.height > 0 ? canvas.height : 720;
+    
     const gridSize = LEVELS[level];
-    const targetAreaSize = 500;
+    
+    // Allocate max 45% of width or 80% of height for the puzzle target area
+    const targetAreaSize = Math.min(canvasW * 0.45, canvasH * 0.8, 500);
     const pieceW = targetAreaSize / gridSize;
     const pieceH = targetAreaSize / gridSize;
 
-    const targetX = 640 + (640 - targetAreaSize) / 2;
-    const targetY = (720 - targetAreaSize) / 2;
+    // Target area on the right side
+    const targetX = canvasW - targetAreaSize - (canvasW * 0.05); // 5% margin from right
+    const targetY = (canvasH - targetAreaSize) / 2;
 
     gridInfoRef.current = { gridSize, pieceWidth: pieceW, pieceHeight: pieceH, targetX, targetY };
 
     const newPieces = [];
+    const maxSpawnX = Math.max(targetX - pieceW - 40, 20); // spawn on left of target
+    const maxSpawnY = Math.max(canvasH - pieceH - 20, 20);
+
     for (let r = 0; r < gridSize; r++) {
       for (let c = 0; c < gridSize; c++) {
         newPieces.push({
           id: `${r}-${c}`,
           row: r,
           col: c,
-          x: Math.random() * (600 - pieceW) + 20,
-          y: Math.random() * (680 - pieceH) + 20,
+          x: Math.random() * (maxSpawnX - 20) + 20,
+          y: Math.random() * (maxSpawnY - 20) + 20,
           correctX: targetX + c * pieceW,
           correctY: targetY + r * pieceH,
           isSnapped: false
@@ -144,11 +154,12 @@ export default function PicturePuzzle() {
           }
 
           // Reference image
+          const refSize = Math.min(150, canvas.width * 0.15);
           ctx.globalAlpha = 0.8;
-          ctx.drawImage(imageRef.current, canvas.width - 170, 20, 150, 150);
+          ctx.drawImage(imageRef.current, canvas.width / 2 - refSize / 2, 20, refSize, refSize);
           ctx.strokeStyle = '#fff';
           ctx.lineWidth = 2;
-          ctx.strokeRect(canvas.width - 170, 20, 150, 150);
+          ctx.strokeRect(canvas.width / 2 - refSize / 2, 20, refSize, refSize);
           ctx.globalAlpha = 1.0;
         }
       }
