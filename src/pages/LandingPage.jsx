@@ -1,7 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Camera, Zap, Shield, Sparkles, ChevronRight, Activity, Hand, Brain, Scissors, Edit3, Calculator, Map, Puzzle, CircleDashed, ArrowDownCircle, Languages, Aperture, Code, Layers, Cpu, Heart, Menu, X } from 'lucide-react';
+import { Camera, Hand, Edit3, Scissors, Calculator, Aperture, Activity, Map, Brain, Puzzle, CircleDashed, ArrowDownCircle, Code, Layers, Cpu, Zap, Heart } from 'lucide-react';
+import { Canvas } from '@react-three/fiber';
+import { Environment, PerspectiveCamera, ContactShadows } from '@react-three/drei';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
+
+import QuantumGrid from '../components/QuantumGrid';
+import RoboticHand from '../components/RoboticHand';
 
 const FEATURES = [
   { name: 'Hand Detection', path: '/app', icon: Camera, color: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-500/30' },
@@ -26,264 +32,222 @@ const TECH_STACK = [
 ];
 
 export default function LandingPage() {
-  const [navOpen, setNavOpen] = useState(false);
-  const canvasRef = useRef(null);
+  const [activeGesture, setActiveGesture] = useState(null);
+  const mouse = useRef({ x: 0, y: 0 });
 
-  // Background particle effect
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let animationFrameId;
-    
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const particles = [];
-    for (let i = 0; i < 60; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: Math.random() * 2 + 1,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
-        alpha: Math.random() * 0.5 + 0.1
-      });
-    }
-
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      particles.forEach((p, i) => {
-        p.x += p.vx;
-        p.y += p.vy;
-
-        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 242, 254, ${p.alpha})`;
-        ctx.fill();
-
-        for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j];
-          const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
-          if (dist < 150) {
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(0, 242, 254, ${0.15 * (1 - dist/150)})`;
-            ctx.lineWidth = 1;
-            ctx.stroke();
-          }
-        }
-      });
-
-      animationFrameId = requestAnimationFrame(draw);
+    const handleMouseMove = (e) => {
+      mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
     };
-
-    draw();
-
-    const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationFrameId);
-    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#030712] relative overflow-x-hidden font-sans scroll-smooth">
+    <div className="min-h-screen bg-[#080B12] relative overflow-x-hidden font-sans text-white scroll-smooth">
       
-      {/* Background Layer */}
+      {/* 3D Background & Hand Layer - Fixed to viewport */}
       <div className="fixed inset-0 z-0">
-        <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none opacity-40"></canvas>
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+        <Canvas shadows dpr={[1, 1.5]} gl={{ powerPreference: "high-performance", antialias: false }}>
+          <PerspectiveCamera makeDefault position={[0, 0, 10]} fov={50} />
+          <color attach="background" args={['#080B12']} />
+          
+          <ambientLight intensity={0.5} />
+          
+          <spotLight 
+            position={[10, 15, 10]} 
+            angle={0.25} 
+            penumbra={0.8} 
+            intensity={2} 
+            color="#f8fafc" 
+            castShadow 
+            shadow-mapSize={[1024, 1024]} 
+            shadow-bias={-0.0001}
+          />
+          <pointLight position={[-10, -10, -10]} intensity={0.5} color="#00f2fe" />
+          
+          <QuantumGrid activeGesture={activeGesture} mouse={mouse} />
+          
+          <group position={[-4.5, 0, 0]}>
+            <RoboticHand activeGesture={activeGesture} mouse={mouse} />
+            <ContactShadows position={[0, -4, 0]} opacity={0.6} scale={15} blur={2.5} far={4} color="#000000" frames={1} resolution={512} />
+          </group>
+          
+          <Environment preset="city" />
+          
+          <EffectComposer disableNormalPass multisampling={0}>
+            <Bloom luminanceThreshold={1.0} mipmapBlur intensity={1.5} />
+          </EffectComposer>
+        </Canvas>
       </div>
 
-      {/* Navbar */}
-      <nav className="relative z-10 px-6 md:px-8 py-5 max-w-7xl mx-auto backdrop-blur-2xl border-b border-white/10 sticky top-0 bg-[#030712]/90 shadow-black/40 shadow-sm">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-3xl bg-gradient-to-br from-[#00f2fe] to-[#4facfe] flex items-center justify-center shadow-[0_0_30px_rgba(0,242,254,0.25)]">
-              <Camera className="text-white" size={24} />
-            </div>
-            <div>
-              <div className="text-xl font-black text-white tracking-tight">Gesture<span className="text-[#00f2fe]">AI</span></div>
-              <div className="text-xs uppercase tracking-[0.25em] text-slate-500 mt-0.5">Interactive gesture experiences</div>
-            </div>
-          </div>
-
-          <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-300">
-            <a href="#features" className="hover:text-white transition-colors">Features</a>
-            <a href="#tech" className="hover:text-white transition-colors">Tech Stack</a>
-            <a href="#about" className="hover:text-white transition-colors">About</a>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Link to="/app" className="hidden md:inline-flex items-center justify-center px-6 py-3 bg-white text-black font-black rounded-2xl border border-transparent hover:bg-slate-100 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.12)]">
-              Launch App
-            </Link>
-            <button
-              onClick={() => setNavOpen(!navOpen)}
-              className="inline-flex items-center justify-center p-3 rounded-2xl border border-white/10 bg-white/5 text-white hover:bg-white/10 transition-colors md:hidden"
-              aria-label="Toggle navigation menu"
+      {/* Scrolling Content Overlay */}
+      <div className="relative z-10 w-full">
+        
+        {/* Hero Section (100vh) */}
+        <div className="min-h-screen flex items-center max-w-7xl mx-auto px-8 lg:px-16 pointer-events-none">
+          <div className="w-full lg:w-[60%] flex flex-col items-start pt-20 pointer-events-auto ml-auto pl-8">
+            <motion.h1 
+              initial={{ opacity: 0, x: 30, scale: 0.9, filter: 'blur(10px)' }}
+              animate={{ opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }}
+              transition={{ duration: 1.2, ease: "easeOut" }}
+              className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tighter leading-[1.1] mb-6 drop-shadow-2xl"
             >
-              {navOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-          </div>
-        </div>
+              Control with your <br />
+              gestures.
+            </motion.h1>
 
-        {navOpen && (
-          <div className="mt-4 p-5 rounded-3xl border border-white/10 bg-slate-950/95 backdrop-blur-2xl shadow-[0_30px_80px_rgba(0,0,0,0.45)] md:hidden">
-            <div className="flex flex-col gap-3 text-white font-semibold">
-              <a href="#features" onClick={() => setNavOpen(false)} className="rounded-2xl px-4 py-3 hover:bg-white/10 transition-colors">Features</a>
-              <a href="#tech" onClick={() => setNavOpen(false)} className="rounded-2xl px-4 py-3 hover:bg-white/10 transition-colors">Tech Stack</a>
-              <a href="#about" onClick={() => setNavOpen(false)} className="rounded-2xl px-4 py-3 hover:bg-white/10 transition-colors">About</a>
-              <Link
-                to="/app"
-                onClick={() => setNavOpen(false)}
-                className="mt-2 inline-flex items-center justify-center rounded-2xl bg-white text-black py-3 font-black text-center"
-              >
-                Launch App
-              </Link>
-            </div>
-          </div>
-        )}
-      </nav>
+            <motion.p 
+              initial={{ opacity: 0, x: 30, filter: 'blur(5px)' }}
+              animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 1.0, delay: 0.3, ease: "easeOut" }}
+              className="text-lg md:text-xl leading-relaxed font-medium mb-10 max-w-2xl p-6 rounded-2xl bg-[#080B12]/60 backdrop-blur-md border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.5)] hover:border-[#00f2fe]/40 transition-colors duration-500"
+            >
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-white italic font-bold block mb-4 drop-shadow-[0_0_10px_rgba(0,242,254,0.4)]">
+                "The most powerful interface is the one you already possess."
+              </span>
+              <span className="text-slate-200 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                Experience the next evolution of spatial computing. Transform your browser into a magical canvas using advanced artificial intelligence. No hardware required—just your hands and your imagination.
+              </span>
+            </motion.p>
 
-      {/* Hero Section */}
-      <main className="relative z-10 flex flex-col items-center justify-center px-4 pt-32 pb-40 text-center">
-        
-        <motion.h1 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-tighter max-w-5xl leading-[1.1] mb-8 drop-shadow-2xl"
-        >
-          Control with your <br className="hidden md:block" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] via-[#4facfe] to-[#00f2fe] bg-[length:200%_auto] animate-gradient pb-2 inline-block drop-shadow-[0_0_30px_rgba(0,242,254,0.3)]">
-            gestures.
-          </span>
-        </motion.h1>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-          className="max-w-3xl mb-12"
-        >
-          <p className="text-lg md:text-xl text-slate-300 leading-relaxed font-medium mb-4">
-            <span className="text-white italic">"The most powerful interface is the one you already possess."</span>
-          </p>
-          <p className="text-base md:text-lg text-slate-400 leading-relaxed">
-            Experience the next evolution of spatial computing. Transform your browser into a magical canvas using advanced artificial intelligence. No hardware required—just your hands and your imagination.
-          </p>
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-          className="flex flex-col sm:flex-row gap-6"
-        >
-          <Link 
-            to="/app" 
-            className="group relative px-8 py-4 bg-white text-black font-black rounded-2xl overflow-hidden transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.4)] flex items-center justify-center gap-3 text-lg"
-          >
-            <span className="relative z-10">Get Started</span>
-            <ChevronRight className="relative z-10 group-hover:translate-x-1 transition-transform" />
-            <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          </Link>
-          
-          <a 
-            href="#features" 
-            className="px-8 py-4 glass-panel rounded-2xl font-bold text-white hover:bg-white/10 transition-all flex items-center justify-center gap-3 text-lg border border-white/10 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]"
-          >
-            Explore Features
-          </a>
-        </motion.div>
-      </main>
-
-      {/* Introduction Paragraph */}
-      <section className="relative z-10 max-w-5xl mx-auto px-6 py-12 text-center">
-        <div className="glass-panel p-8 md:p-12 rounded-3xl border border-primary/20 bg-slate-900/40 shadow-[0_0_40px_rgba(0,242,254,0.1)]">
-          <p className="text-xl md:text-2xl text-slate-300 leading-relaxed font-medium">
-            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#4facfe] font-black">Gesture AI</span>, a revolutionary browser-based platform that translates your hand gestures into interactive commands. Whether you want to draw in mid-air, challenge an AI in Rock Paper Scissors, or test your memory, everything is controlled securely and privately through your webcam. No extra hardware, no downloads—just seamless spatial computing directly in your browser.
-          </p>
-        </div>
-      </section>
-
-      {/* Full Feature Grid */}
-      <section id="features" className="relative z-10 max-w-7xl mx-auto px-4 py-24">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-4">12 Powerful Features</h2>
-          <p className="text-xl text-slate-400">Jump directly into any module from right here.</p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {FEATURES.map((feat, index) => {
-            const Icon = feat.icon;
-            return (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+              className="flex gap-4 mb-16"
+            >
               <Link 
-                to={feat.path} 
-                key={feat.name}
-                className="glass-panel p-6 flex flex-col items-center justify-center text-center group hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300 relative overflow-hidden"
-                style={{ animationDelay: `${index * 50}ms` }}
+                to="/app" 
+                className="px-8 py-3 bg-gradient-to-r from-[#00f2fe] to-[#4facfe] text-black font-black rounded-full hover:scale-105 transition-transform shadow-[0_0_30px_rgba(0,242,254,0.4)]"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className={`w-16 h-16 rounded-2xl ${feat.bg} flex items-center justify-center mb-4 border ${feat.border} group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-                  <Icon className={`${feat.color}`} size={32} />
-                </div>
-                <h3 className="text-lg font-bold text-white group-hover:text-[#00f2fe] transition-colors">{feat.name}</h3>
+                Get Started
               </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Tech Stack Section */}
-      <section id="tech" className="relative z-10 max-w-7xl mx-auto px-4 py-24 border-t border-white/5">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-4">Cutting Edge Tech</h2>
-          <p className="text-xl text-slate-400 max-w-2xl mx-auto">Built with modern web technologies to ensure zero-latency performance and beautiful aesthetics.</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {TECH_STACK.map((tech, i) => {
-            const Icon = tech.icon;
-            return (
-              <div key={tech.name} className="glass-panel p-8 text-center group hover:bg-white/5 transition-colors cursor-default">
-                <Icon size={48} className="mx-auto mb-6 text-slate-300 group-hover:text-primary transition-colors" />
-                <h3 className="text-2xl font-bold text-white mb-2">{tech.name}</h3>
-                <p className="text-slate-400 font-medium">{tech.desc}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-white/10 py-16 text-center bg-[#030712] backdrop-blur-md flex flex-col items-center">
-        <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass-button mb-8 border border-primary/20 shadow-[0_0_20px_rgba(59,130,246,0.15)] bg-primary/5 hover:bg-primary/10 transition-colors">
-          <Heart size={16} className="text-pink-500 animate-pulse" />
-          <span className="text-sm font-bold text-slate-300">Built with Passion & AI by <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#4facfe] font-black">Priyanka Priyadarshinee</span></span>
-        </div>
-        
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00f2fe] to-[#4facfe] flex items-center justify-center shadow-[0_0_15px_rgba(0,242,254,0.4)]">
-            <Camera className="text-white" size={20} />
+              <a 
+                href="#features"
+                className="px-8 py-3 bg-white/5 border border-white/10 text-white font-bold rounded-full hover:bg-white/10 transition-colors"
+              >
+                Explore Features
+              </a>
+            </motion.div>
           </div>
-          <span className="text-xl font-black tracking-tight text-white">Gesture<span className="text-[#00f2fe]">AI</span></span>
         </div>
-        <p className="text-slate-600 text-sm mt-2">© 2026 All rights reserved.</p>
-      </footer>
+
+        {/* Content Below Fold - Transparent to keep 3D hand visible */}
+        <div className="bg-transparent pointer-events-auto overflow-hidden">
+          
+          {/* Welcome Section */}
+          <motion.section 
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="max-w-5xl mx-auto px-6 py-20 text-center"
+          >
+            <div className="p-8 md:p-12 rounded-3xl border border-[#00f2fe]/30 bg-[#080B12]/80 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+              <p className="text-xl md:text-3xl text-white leading-relaxed font-semibold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#4facfe] font-black drop-shadow-none">Gesture AI</span>, a revolutionary browser-based platform that translates your hand gestures into interactive commands. Whether you want to draw in mid-air, challenge an AI in Rock Paper Scissors, or test your memory, everything is controlled securely and privately through your webcam. No extra hardware, no downloads—just seamless spatial computing directly in your browser.
+              </p>
+            </div>
+          </motion.section>
+
+          {/* Features Grid */}
+          <section id="features" className="max-w-7xl mx-auto px-4 py-24">
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 mb-4 drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">12 Powerful Features</h2>
+              <p className="text-xl md:text-2xl text-slate-200 font-medium drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Jump directly into any module from right here.</p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {FEATURES.map((feat, index) => {
+                const Icon = feat.icon;
+                return (
+                  <motion.div
+                    key={feat.name}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.05 }}
+                    whileHover={{ y: -8, scale: 1.02 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Link 
+                      to={feat.path} 
+                      onMouseEnter={() => setActiveGesture(feat.name)}
+                      onMouseLeave={() => setActiveGesture(null)}
+                      className="p-6 h-full flex flex-col items-center justify-center text-center group relative overflow-hidden rounded-2xl bg-[#080B12]/90 backdrop-blur-md border border-white/10 hover:border-[#00f2fe]/60 hover:bg-[#00f2fe]/10 shadow-[0_10px_30px_rgba(0,0,0,0.4)] hover:shadow-[0_0_30px_rgba(0,242,254,0.2)] transition-colors duration-300"
+                    >
+                      <div className={`w-16 h-16 rounded-2xl ${feat.bg} flex items-center justify-center mb-4 border ${feat.border} shadow-lg`}>
+                        <Icon className={`${feat.color}`} size={32} />
+                      </div>
+                      <h3 className="text-xl font-black text-slate-100 group-hover:text-[#00f2fe] transition-colors drop-shadow-md">{feat.name}</h3>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Tech Stack */}
+          <section id="tech" className="max-w-7xl mx-auto px-4 py-24 border-t border-white/10">
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 mb-4 drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">Cutting Edge Tech</h2>
+              <p className="text-xl md:text-2xl text-slate-200 font-medium max-w-2xl mx-auto drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Built with modern web technologies to ensure zero-latency performance and beautiful aesthetics.</p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {TECH_STACK.map((tech, index) => {
+                const Icon = tech.icon;
+                return (
+                  <motion.div 
+                    key={tech.name} 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    whileHover={{ y: -5 }}
+                    className="p-8 text-center group rounded-2xl bg-[#080B12]/90 backdrop-blur-md border border-white/10 hover:border-white/30 hover:bg-white/5 transition-colors shadow-[0_10px_30px_rgba(0,0,0,0.4)] cursor-default"
+                  >
+                    <Icon size={48} className="mx-auto mb-6 text-slate-300 group-hover:text-white transition-colors drop-shadow-lg" />
+                    <h3 className="text-2xl font-black text-slate-100 mb-2 drop-shadow-md">{tech.name}</h3>
+                    <p className="text-slate-300 font-medium drop-shadow-sm">{tech.desc}</p>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Footer */}
+          <footer className="border-t border-white/10 py-16 text-center bg-[#030712]/95 backdrop-blur-xl flex flex-col items-center">
+            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full mb-8 border border-[#00f2fe]/20 shadow-[0_0_20px_rgba(0,242,254,0.15)] bg-[#00f2fe]/5 hover:bg-[#00f2fe]/10 transition-colors">
+              <Heart size={16} className="text-pink-500 animate-pulse" />
+              <span className="text-sm font-bold text-slate-300">Built with Passion & AI by <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#4facfe] font-black">Priyanka Priyadarshinee</span></span>
+            </div>
+            
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00f2fe] to-[#4facfe] flex items-center justify-center shadow-[0_0_15px_rgba(0,242,254,0.4)]">
+                <Camera className="text-white" size={20} />
+              </div>
+              <span className="text-xl font-black tracking-tight text-white">Gesture<span className="text-[#00f2fe]">AI</span></span>
+            </div>
+            <p className="text-slate-600 text-sm mt-2">© 2026 All rights reserved.</p>
+          </footer>
+
+        </div>
+      </div>
     </div>
   );
 }
